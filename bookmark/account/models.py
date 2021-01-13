@@ -20,7 +20,6 @@ class Profile(models.Model):
 
 
 class Contact(models.Model):
-
     # ForeignKey на пользователя-подписчика;
     user_form = models.ForeignKey(
         'auth.User', related_name='rel_from_set', on_delete=models.CASCADE)

@@ -26,14 +26,22 @@
         {% for user in image.users_like.all %}
         <div>
             {% if user.profile.photo %}
-              <img src="{{ user.profile.photo.url }}">
+              <a href="{{ user.get_absolute_url }}" class="title">
+                <img src="{{ user.profile.photo.url }}">
+              </a>
             {% else %}
-              <img src="{{ user.profile.photo_url }}">
+              <a href="{{ user.get_absolute_url }}" class="title">
+                <img src="{{ user.profile.photo_url }}">
+              </a>
             {% endif %}
             {% if user.first_name != ''%}
+              <a href="{{ user.get_absolute_url }}" class="title">
                 <p>{{ user.first_name }}</p>
+              </a>
             {% else %}
+              <a href="{{ user.get_absolute_url }}" class="title">
                 <p>{{ user.username }}</p>
+              </a>
             {% endif %}
         </div>
         {% empty %}

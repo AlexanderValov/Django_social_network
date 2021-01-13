@@ -12,6 +12,8 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .forms import LoginForm, UserRegistrationForm, UserEditForm, ProfileEditForm
 from .models import Profile, Contact
 from common.decorators import ajax_required
+from actions.utils import create_action
+from actions.models import Action
 
 
 @ajax_required
@@ -26,6 +28,7 @@ def user_follow(request):
             if action == 'follow':
                 Contact.objects.get_or_create(
                     user_form=request.user, user_to=user)
+                create_action(request.user, 'is following', user)
             else:
                 Contact.objects.filter(
                     user_form=request.user, user_to=user).delete()
@@ -91,8 +94,33 @@ def edit(request):
 
 @login_required
 def dashboard(request):
-    return render(request, 'account/dashboard.html', {'section': 'dashboard'})
-
+    # По умолчанию отображаем все действия
+    # Кроме авторизованного пользователя
+    actions = Action.objects.exclude(user=request.user)
+    following_ids = request.user.following.values_list('id', flat=True)
+    if following_ids:
+        # Если пользователь подписался на кого, показывает только его активность
+        actions = actions.filter(user_id__in=following_ids)
+    # Метод select_related() помогает нам оптимизировать доступ к объектам,
+    # связанным отношением «один ко многим»
+    actions = actions.select_related(
+        'user', 'user__profile').prefetch_related('target')[:10]
+    # метод prefetch_related() работает для отношений «многие ко многим» и
+    # «многие к одному» (ManyToMany и обратная связь для ForeignKey).
+    # и к полям типов GenericRelation и GenericForeignKey.
+    paginator = Paginator(actions, 5)
+    page = request.GET.get('page')
+    try:
+        actions = paginator.page(page)
+    except PageNotAnInteger:
+        actions = paginator.page(1)
+    except EmptyPage:
+        actions = paginator.page(paginator.num_pages)
+    context = {
+        'section': 'dashboard',
+        'actions': actions
+    }
+    return render(request, 'account/dashboard.html', context)
 
 def user_login(request):
     if request.method == 'POST':
@@ -137,6 +165,7 @@ def register(request):
             # Когда пользователь регистрируется на сайте, мы создаем пустой профиль,
             # ассоциированный с ним
             Profile.objects.create(user=new_user)
+            create_action(new_user, 'has created an account')
             return render(request, 'account/register_done.html', {'new_user': new_user})
     else:
         user_form = UserRegistrationForm()

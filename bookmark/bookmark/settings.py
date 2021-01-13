@@ -32,7 +32,7 @@ ALLOWED_HOSTS = [
     'mysite.com',
     'localhost',
     '127.0.0.1',
-    #'49fd2b63975a.ngrok.io'  # изменяется после каждого запуска ngrok 
+    '9ee586403d1f.ngrok.io',  # изменяется после каждого запуска ngrok 
 ]
 
 
@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'images.apps.ImagesConfig',
+    'actions.apps.ActionsConfig',
     'social_django',
     'sorl.thumbnail',
 ]
@@ -117,7 +118,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 
