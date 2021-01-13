@@ -1,16 +1,69 @@
-from django.shortcuts import render
-from django.http import HttpResponse
+from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages 
+from django.views.decorators.http import require_POST
+from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 
 from .forms import LoginForm, UserRegistrationForm, UserEditForm, ProfileEditForm
-from .models import Profile
+from .models import Profile, Contact
+from common.decorators import ajax_required
+
+
+@ajax_required
+@require_POST
+@login_required
+def user_follow(request):
+    user_id = request.POST.get('id')
+    action = request.POST.get('action')
+    if user_id and action:
+        try:
+            user = User.objects.get(id=user_id)
+            if action == 'follow':
+                Contact.objects.get_or_create(
+                    user_form=request.user, user_to=user)
+            else:
+                Contact.objects.filter(
+                    user_form=request.user, user_to=user).delete()
+            return JsonResponse({'status': 'ok'})
+        except User.DoesNotExist:
+            return JsonResponse({'status': 'ok'})
+    return JsonResponse({'status': 'ok'})
+
+
+@login_required
+def user_list(request):
+    users_all = User.objects.filter(is_active=True)
+    paginator = Paginator(users_all, 10)
+    page = request.GET.get('page')
+    try:
+        users = paginator.page(page)
+    except PageNotAnInteger:
+        users = paginator.page(1)
+    except EmptyPage:
+        users = paginator.page(paginator.num_pages)
+    context = {
+        'section': 'people',
+        'users': users,
+        'page': page,
+    }
+    return render(request, 'account/user/list.html', context)
+
+
+@login_required
+def user_detail(request, username):
+    # получение активного пользователя по его логину
+    user = get_object_or_404(User, username=username, is_active=True)
+    return render(request, 'account/user/detail.html', {'section': 'peolpe', 'user': user})
 
 
 @login_required
 def edit(request):
+    # Изменение профиля
     if request.method == 'POST':
         user_form = UserEditForm(instance=request.user, data=request.POST)
         profile_form = ProfileEditForm(
@@ -81,7 +134,7 @@ def register(request):
             new_user.set_password(user_form.cleaned_data['password'])
             # Сохраняем пользователя в базе данных.
             new_user.save()
-            # Когда пользователь регистрируется на сайте, мы создаем пустой профиль, 
+            # Когда пользователь регистрируется на сайте, мы создаем пустой профиль,
             # ассоциированный с ним
             Profile.objects.create(user=new_user)
             return render(request, 'account/register_done.html', {'new_user': new_user})

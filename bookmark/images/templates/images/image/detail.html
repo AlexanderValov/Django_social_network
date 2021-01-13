@@ -25,7 +25,11 @@
     <div class="image-likes">
         {% for user in image.users_like.all %}
         <div>
-            <img src="{{ user.profile.photo_url|default_if_none:'https://pbs.twimg.com/media/CIMoiZJW8AE3m-m.jpg' }}">
+            {% if user.profile.photo %}
+              <img src="{{ user.profile.photo.url }}">
+            {% else %}
+              <img src="{{ user.profile.photo_url }}">
+            {% endif %}
             {% if user.first_name != ''%}
                 <p>{{ user.first_name }}</p>
             {% else %}
