@@ -4,6 +4,12 @@
 
 {% block content %}
     <h1>Images bookmarked</h1>
+    <p>Sorting:
+      | By title<a href="?order_by=title">↓↓</a> <a href="?order_by={{by_title}}">↑↑</a> | 
+      By date<a href="?order_by=created">↓↓</a> <a href="?order_by={{by_created}}">↑↑</a>| 
+      By total_liks<a href="?order_by=total_liks">↓↓</a> <a href="?order_by={{by_total_likes}}">↑↑</a> |
+      <a href="{% url 'images:ranking' %}">Most viewed</a>
+    </p>
     <div id="image-list">
         {% include "images/image/list_ajax.html" %}
     </div>
