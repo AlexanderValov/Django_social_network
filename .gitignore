@@ -349,7 +349,7 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
-my_env
+venv
 .idea
 db.sqlite3
 __pycache__
